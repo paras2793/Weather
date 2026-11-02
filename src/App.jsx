@@ -1,6 +1,5 @@
 import { useState } from "react";
 
-
 import SearchBox from "./components/SearchBox";
 import WeatherCard from "./components/WeatherCard";
 import UVIndex from "./components/UVIndex";
@@ -37,7 +36,6 @@ function App() {
       if (!geocodingApiUrl || !weatherApiUrl) {
         throw new Error("Check the API URLs in your .env file.");
       }
-
    
       const geocodingUrl = new URL(geocodingApiUrl);
       geocodingUrl.searchParams.set("name", searchCity);
@@ -50,7 +48,6 @@ function App() {
       if (!geocodingResponse.ok || geocodingData.error || !location) {
         throw new Error("City not found. Check the spelling and try again.");
       }
-
 
       const weatherUrl = new URL(weatherApiUrl);
       weatherUrl.searchParams.set("latitude", location.latitude);
