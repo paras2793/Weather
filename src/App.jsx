@@ -1,184 +1,123 @@
+import { motion } from "framer-motion";
 import { useState } from "react";
-
-import SearchBox from "./components/SearchBox";
-import WeatherCard from "./components/WeatherCard";
-import UVIndex from "./components/UVIndex";
-import Wind from "./components/Wind";
-import Humidity from "./components/Humidity";
-import SunTimes from "./components/SunTimes";
-import Visibility from "./components/Visibility";
-import AirQuality from "./components/AirQuality";
+import "./App.css";
+import WeatherApp from "./WeatherFullPage";
 
 function App() {
   const [city, setCity] = useState("");
-  const [displayedCity, setDisplayedCity] = useState("");
-  const [weather, setWeather] = useState(null);
-  const [airQuality, setAirQuality] = useState(null);
-  const [unit, setUnit] = useState("C");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [cities, setCities] = useState([]);
+  const [selectedCity, setSelectedCity] = useState(null);
 
-  async function fetchWeather() {
-    const searchCity = city.trim();
+  function addCity() {
+    const newCity = city.trim();
 
-    if (searchCity === "" || loading) {
+    if (!newCity) return;
+
+    const alreadyExists = cities.some(
+      (item) => item.toLowerCase() === newCity.toLowerCase()
+    );
+
+    if (alreadyExists) {
+      alert("City already exists!");
       return;
     }
 
-    setLoading(true);
-    setError("");
-    setAirQuality(null);
+    setCities((prev) => [...prev, newCity]);
+    setCity("");
+  }
 
-    try {
-      const geocodingApiUrl = import.meta.env.VITE_GEOCODING_API_URL;
-      const weatherApiUrl = import.meta.env.VITE_WEATHER_API_URL;
+  function deleteCity(cityName) {
+    setCities((prev) =>
+      prev.filter((item) => item !== cityName)
+    );
+  }
 
-      if (!geocodingApiUrl || !weatherApiUrl) {
-        throw new Error("Check the API URLs in your .env file.");
-      }
-   
-      const geocodingUrl = new URL(geocodingApiUrl);
-      geocodingUrl.searchParams.set("name", searchCity);
-      geocodingUrl.searchParams.set("count", "1");
+  if (selectedCity) {
+    return (
+      <div className="min-h-screen bg-slate-200 p-3 sm:p-6">
+        <div className="mx-auto max-w-7xl  rounded-3xl">
+          <button
+            onClick={() => setSelectedCity(null)}
+            className="mb-5 rounded-full bg-slate-900 px-6 py-3 font-semibold text-white hover:bg-slate-700"
+          >
+            ← Back To Cities
+          </button>
 
-      const geocodingResponse = await fetch(geocodingUrl);
-      const geocodingData = await geocodingResponse.json();
-      const location = geocodingData.results && geocodingData.results[0];
-
-      if (!geocodingResponse.ok || geocodingData.error || !location) {
-        throw new Error("City not found. Check the spelling and try again.");
-      }
-
-      const weatherUrl = new URL(weatherApiUrl);
-      weatherUrl.searchParams.set("latitude", location.latitude);
-      weatherUrl.searchParams.set("longitude", location.longitude);
-      weatherUrl.searchParams.set(
-        "current",
-        "temperature_2m,wind_speed_10m,relative_humidity_2m,weather_code,visibility"
-      );
-      weatherUrl.searchParams.set("daily", "sunrise,sunset,uv_index_max");
-      weatherUrl.searchParams.set("timezone", "auto");
-      weatherUrl.searchParams.set("forecast_days", "1");
-
-      const weatherResponse = await fetch(weatherUrl);
-      const weatherData = await weatherResponse.json();
-
-      if (
-        !weatherResponse.ok ||
-        weatherData.error ||
-        !weatherData.current ||
-        !weatherData.daily
-      ) {
-        throw new Error("Could not load weather. Please try again.");
-      }
-
-      const current = weatherData.current;
-      const daily = weatherData.daily;
-
-      setDisplayedCity(location.name);
-      setWeather({
-        temperature: current.temperature_2m,
-        condition: current.weather_code,
-        wind: current.wind_speed_10m,
-        humidity: current.relative_humidity_2m,
-        visibility:
-          current.visibility == null
-            ? null
-            : (current.visibility / 1000).toFixed(1),
-        sunrise: daily.sunrise && daily.sunrise[0],
-        sunset: daily.sunset && daily.sunset[0],
-        uvIndex: daily.uv_index_max && daily.uv_index_max[0],
-      });
-
-
-      const airQualityUrl = new URL(
-        import.meta.env.VITE_AQI_API_URL
-      );
-      airQualityUrl.searchParams.set("latitude", location.latitude);
-      airQualityUrl.searchParams.set("longitude", location.longitude);
-      airQualityUrl.searchParams.set("current", "us_aqi");
-      airQualityUrl.searchParams.set("timezone", "auto");
-
-      try {
-        const airQualityResponse = await fetch(airQualityUrl);
-        const airQualityData = await airQualityResponse.json();
-
-        if (airQualityResponse.ok && airQualityData.current) {
-          setAirQuality(airQualityData.current.us_aqi ?? null);
-        }
-      } catch {
-        setAirQuality(null);
-      }
-
-      setCity("");
-    } catch (error) {
-      setError(error.message || "Something went wrong.");
-    } finally {
-      setLoading(false);
-    }
+          <WeatherApp
+            key={selectedCity}
+            initialCity={selectedCity}
+          />
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-gray-200 p-4">
-      <div className="mx-auto grid min-h-screen w-full max-w-6xl grid-cols-1 overflow-hidden rounded-3xl bg-gray-100 shadow-lg lg:grid-cols-3">
-        <aside className="flex min-w-0 flex-col bg-white p-6 lg:col-span-1">
-          <SearchBox
-            city={city}
-            setCity={setCity}
-            onSearch={fetchWeather}
-            loading={loading}
-          />
+    <div className="min-h-screen bg-slate-200 p-3 sm:p-6">
+      <div className="mx-auto max-w-7xl rounded-3xl bg-slate-100 shadow-xl">
+        <header className="flex flex-col gap-5 bg-white p-6 sm:p-8  rounded-3xl">
+          <h1 className="text-3xl font-bold text-slate-900">
+            Weather App
+          </h1>
 
-          {error && (
-            <p className="mt-4 rounded-lg bg-red-100 p-3 text-sm text-red-700">
-              {error}
-            </p>
-          )}
+          <div className="flex flex-col gap-3 sm:flex-row">
 
-          <WeatherCard
-            city={displayedCity}
-            weather={weather}
-            unit={unit}
-            loading={loading}
-          />
-        </aside>
-
-        <main className="flex min-w-0 flex-col bg-gray-100 p-6 lg:col-span-2">
-          <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-            <div>
-              <h2 className="text-2xl font-semibold text-gray-900">
-                Today's Highlights
-              </h2>
-            </div>
-
-            <div className="flex items-center gap-2 rounded-full bg-white p-1 shadow-sm">
-              <button
-                onClick={() => setUnit("C")}
-                className={unit === "C" ? "rounded-full bg-gray-900 px-3 py-2 text-sm font-semibold text-white" : "rounded-full bg-gray-100 px-3 py-2 text-sm font-semibold text-gray-700"}
-              >
-                °C
-              </button>
-              <button
-                onClick={() => setUnit("F")}
-                className={unit === "F" ? "rounded-full bg-gray-900 px-3 py-2 text-sm font-semibold text-white" : "rounded-full bg-gray-100 px-3 py-2 text-sm font-semibold text-gray-700"}
-              >
-                °F
-              </button>
-            </div>
-          </div>
-
-          <div className="grid flex-1 grid-cols-1 gap-4 sm:grid-cols-2">
-            <UVIndex value={weather?.uvIndex} />
-            <Wind value={weather?.wind} />
-            <SunTimes
-              sunrise={weather?.sunrise}
-              sunset={weather?.sunset}
+            <input
+              className="min-w-0 flex-1 rounded-full border border-slate-200 bg-slate-50 px-5 py-3 outline-none transition focus:border-slate-500"
+              type="text"
+              placeholder="Enter a city..."
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") addCity();
+              }}
             />
-            <Humidity value={weather?.humidity} />
-            <Visibility value={weather?.visibility} />
-            <AirQuality value={airQuality} />
-          </div>
 
+            <button
+              type="button"
+              onClick={addCity}
+              className="rounded-full bg-slate-900 px-7 py-3 font-semibold text-white transition hover:bg-slate-700"
+            >
+              + Add City
+            </button>
+          </div>
+        </header>
+   
+        <main className="min-h-[300px] p-5 sm:p-8">
+          {cities.length > 0 && (
+            <ul className="space-y-4">
+              {cities.map((item) => (
+
+                <motion.li
+                  key={item}
+                  className="flex items-center gap-4 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md"
+                  initial={{ opacity: 0, scale: 0 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.9 }}
+                  transition={{
+                      duration: 0.4,
+                      scale: { type: "spring", visualDuration: 0.4, bounce: 0.1 },
+                  }}
+                >
+                  <button
+                    onClick={() => setSelectedCity(item)}
+                    className="flex flex-1 items-center gap-4 text-left"
+                  >
+                    <span className="text-xl font-semibold text-slate-900 transition hover:text-indigo-600">
+                      {item}
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => deleteCity(item)}
+                    className="rounded-full bg-red-50 px-5 py-2 font-semibold text-red-600 transition hover:bg-red-100"
+                  >
+                    Delete
+                  </button>
+                </motion.li>
+              ))}
+            </ul>
+          )}
         </main>
       </div>
     </div>
