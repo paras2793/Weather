@@ -1,15 +1,15 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 import { useState, useEffect } from "react";
 
-import SearchBox from "./components/SearchBox";
-import WeatherCard from "./components/WeatherCard";
-import UVIndex from "./components/UVIndex";
-import Wind from "./components/Wind";
-import Humidity from "./components/Humidity";
-import SunTimes from "./components/SunTimes";
-import Visibility from "./components/Visibility";
-import AirQuality from "./components/AirQuality";
-import WeeklyForecast from "./components/WeeklyForecast";
+import SearchBox from "./components/WeatherDetail/SearchBox";
+import WeatherCard from "./components/WeatherDetail/WeatherCard";
+import UVIndex from "./components/WeatherDetail/UVIndex";
+import Wind from "./components/WeatherDetail/Wind";
+import Humidity from "./components/WeatherDetail/Humidity";
+import SunTimes from "./components/WeatherDetail/SunTimes";
+import Visibility from "./components/WeatherDetail/Visibility";
+import AirQuality from "./components/WeatherDetail/AirQuality";
+import WeeklyForecast from "./components/WeatherDetail/WeeklyForecast";
 
 function App({ initialCity = "" }) {
   const [city, setCity] = useState(initialCity);
@@ -32,9 +32,9 @@ function App({ initialCity = "" }) {
     setDailyForecast(null);
 
     try {
-      const geocodingApiUrl = import.meta.env.VITE_GEOCODING_API_URL;
-      const weatherApiUrl = import.meta.env.VITE_WEATHER_API_URL;
-      const aqiApiUrl = import.meta.env.VITE_AQI_API_URL;
+      const geocodingApiUrl = import.meta.env.VITE_GEOCODING_API;
+      const weatherApiUrl = import.meta.env.VITE_WEATHER_API;
+      const aqiApiUrl = import.meta.env.VITE_AQI_API;
 
       if (!geocodingApiUrl || !weatherApiUrl) {
         throw new Error("Check your API URLs in the .env file.");
