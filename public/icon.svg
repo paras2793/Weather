@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Weather Dashboard</title>
+  <desc id="desc">A glowing sun behind a soft blue cloud with three raindrops on a deep navy background.</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#102d66"/>
+      <stop offset=".48" stop-color="#090f32"/>
+      <stop offset="1" stop-color="#11105a"/>
+    </linearGradient>
+    <linearGradient id="edge" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#48d7ff"/>
+      <stop offset=".45" stop-color="#246bff"/>
+      <stop offset="1" stop-color="#4a3dff"/>
+    </linearGradient>
+    <radialGradient id="sun" cx="35%" cy="25%" r="80%">
+      <stop offset="0" stop-color="#fff6a2"/>
+      <stop offset=".45" stop-color="#ffd83e"/>
+      <stop offset="1" stop-color="#ff9d16"/>
+    </radialGradient>
+    <linearGradient id="cloud" x1=".2" y1="0" x2=".65" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset=".42" stop-color="#b8ddff"/>
+      <stop offset="1" stop-color="#4597f5"/>
+    </linearGradient>
+    <linearGradient id="drop" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#83f4ff"/>
+      <stop offset=".5" stop-color="#24c7ff"/>
+      <stop offset="1" stop-color="#1765e9"/>
+    </linearGradient>
+    <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="12" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="softShadow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="7" result="blur"/>
+      <feOffset dy="7" result="offset"/>
+      <feComponentTransfer><feFuncA type="linear" slope=".28"/></feComponentTransfer>
+      <feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Deep blue glass-like tile -->
+  <rect x="22" y="22" width="468" height="468" rx="104" fill="url(#background)" stroke="url(#edge)" stroke-width="3"/>
+  <rect x="26" y="26" width="460" height="460" rx="100" fill="none" stroke="#7dcfff" stroke-opacity=".16" stroke-width="2"/>
+
+  <!-- Sun and rays -->
+  <g filter="url(#glow)" stroke="#ffc42e" stroke-width="15" stroke-linecap="round">
+    <path d="M292 102v25"/>
+    <path d="M225 129l17 18"/>
+    <path d="M359 129l-17 18"/>
+    <path d="M393 208h-25"/>
+    <path d="M360 273l-17-17"/>
+  </g>
+  <circle cx="292" cy="208" r="67" fill="url(#sun)" filter="url(#softShadow)"/>
+
+  <!-- Cloud silhouette -->
+  <path d="M135 306c-31 0-55-23-55-53 0-27 20-49 47-52 8-34 37-59 73-59 32 0 59 20 70 49 8-4 17-6 27-6 35 0 64 27 64 61 0 34-27 60-62 60H135z" fill="url(#cloud)" filter="url(#softShadow)"/>
+  <path d="M90 267c4 19 21 33 45 33h164c24 0 42-15 47-35" fill="none" stroke="#e9f7ff" stroke-opacity=".38" stroke-width="5" stroke-linecap="round"/>
+  <path d="M151 207c8-27 31-45 59-45" fill="none" stroke="#fff" stroke-opacity=".45" stroke-width="5" stroke-linecap="round"/>
+
+  <!-- Three rain drops -->
+  <g filter="url(#glow)" fill="url(#drop)">
+    <path d="M165 337c0 0 19-25 19-25v31c0 12-9 21-20 21-10 0-17-7-17-16 0-5 2-8 18-11z" transform="translate(0 0)"/>
+    <path d="M246 352c0 0 19-25 19-25v31c0 12-9 21-20 21-10 0-17-7-17-16 0-5 2-8 18-11z"/>
+    <path d="M327 337c0 0 19-25 19-25v31c0 12-9 21-20 21-10 0-17-7-17-16 0-5 2-8 18-11z"/>
+  </g>
+</svg>
