@@ -1,7 +1,7 @@
 /* eslint-disable react-hooks/set-state-in-effect */
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import citycalling from "./cityName";
+import citycalling from "./CityName";
 
 function CityManager({
   cities,
@@ -74,7 +74,7 @@ function CityManager({
   );
 
   return (
-    <>
+    <div>
       <header className="flex flex-col gap-5 rounded-3xl bg-white p-6 sm:p-8">
         <h1 className="text-3xl font-bold text-slate-900">
           Weather App
@@ -98,10 +98,8 @@ function CityManager({
                 }
               }}
             />
-
             {open && search.trim() && (
               <div className="absolute left-0 right-0 top-full z-50 mt-2 max-h-60 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-2 shadow-xl">
-
                 {loading ? (
                   <p className="p-3 text-sm text-gray-500">
                     Loading cities...
@@ -225,7 +223,7 @@ function CityManager({
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }
 
