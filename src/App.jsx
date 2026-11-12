@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import "./App.css";
 
 import CityManager from "./components/Reusable/CityManager";
@@ -7,8 +7,21 @@ import WeatherApp from "./WeatherFullPage";
 
 function App() {
   const [city, setCity] = useState("");
-  const [cities, setCities] = useState([]);
+
+  // Load previously saved cities
+  const [cities, setCities] = useState(() => {
+    const savedCities = localStorage.getItem("weather-cities");
+
+    return savedCities ? JSON.parse(savedCities) : [];
+  });
+
   const [selectedCity, setSelectedCity] = useState(null);
+
+  // Save cities whenever they change
+  useEffect(() => {
+    localStorage.setItem("weather-cities", JSON.stringify(cities));
+  }, [cities]);
+
   function addCity() {
     const newCity = city.trim();
 
@@ -53,11 +66,9 @@ function App() {
     );
   }
 
-
   return (
     <div className="min-h-screen bg-slate-200 p-3 sm:p-6">
       <div className="mx-auto max-w-7xl rounded-3xl bg-slate-100 shadow-xl">
-
         <CityManager
           cities={cities}
           city={city}
@@ -66,7 +77,6 @@ function App() {
           onSelectCity={setSelectedCity}
           onDeleteCity={deleteCity}
         />
-
       </div>
     </div>
   );

@@ -1,5 +1,7 @@
-import { useEffect, useState } from "react";
+/* eslint-disable react-hooks/set-state-in-effect */
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import citycalling from "./cityName";
 
 function CityManager({
   cities,
@@ -9,122 +11,67 @@ function CityManager({
   setCity,
   onAddCity,
 }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [suggestions, setSuggestions] = useState([]);
-  const [isSearching, setIsSearching] = useState(false);
-  const [searchError, setSearchError] = useState("");
-  const [hasSelectedPlace, setHasSelectedPlace] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [showDeletePopup, setShowDeletePopup] = useState(false);
+  const [cityToDelete, setCityToDelete] = useState(null);
+  const [allCities, setAllCities] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const search = city ?? "";
 
   useEffect(() => {
-    const searchText = city.trim();
+    const searchTerm = search.trim();
 
-    if (!isOpen || searchText.length < 1 || hasSelectedPlace) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setSuggestions([]);
-      setSearchError("");
-      setIsSearching(false);
+    if (searchTerm.length < 2) {
+      setAllCities([]);
+      setError("");
+      setLoading(false);
       return;
     }
+
+    setLoading(true);
+    setError("");
 
     const controller = new AbortController();
 
     const timeoutId = setTimeout(async () => {
       try {
-        setIsSearching(true);
-        setSearchError("");
+        const data = await citycalling(searchTerm, controller.signal);
 
-        let places = [];
+        let cityList = data;
 
-        // Open-Meteo does not return results for a one-character search.
-        // Photon is used for the first character, then Open-Meteo for longer searches.
-        if (searchText.length === 1) {
-          const photonUrl = new URL("https://photon.komoot.io/api/");
-          photonUrl.searchParams.set("q", searchText);
-          photonUrl.searchParams.set("limit", "10");
-
-          const response = await fetch(photonUrl, {
-            signal: controller.signal,
-          });
-          const data = await response.json();
-
-          if (!response.ok) {
-            throw new Error("Could not search for cities. Please try again.");
-          }
-
-          const cityTypes = ["city", "town", "village", "municipality", "hamlet"];
-
-          places = (data.features || [])
-            .filter((feature) => {
-              const details = feature.properties || {};
-              return (
-                details.osm_key === "place" &&
-                cityTypes.includes(details.osm_value)
-              );
-            })
-            .map((feature) => {
-              const details = feature.properties || {};
-              return {
-                id: details.osm_id || `${details.name}-${feature.geometry?.coordinates?.join(",")}`,
-                name: details.name || details.city || details.town || details.village,
-                admin1: details.state,
-                country: details.country,
-              };
-            })
-            .filter((place) => place.name);
-        } else {
-          const geocodingApiUrl = import.meta.env.VITE_GEOCODING_API;
-
-          if (!geocodingApiUrl) {
-            throw new Error("Check VITE_GEOCODING_API in your .env file.");
-          }
-
-          const geocodingUrl = new URL(geocodingApiUrl);
-          geocodingUrl.searchParams.set("name", searchText);
-          geocodingUrl.searchParams.set("count", "10");
-          geocodingUrl.searchParams.set("language", "en");
-
-          const response = await fetch(geocodingUrl, {
-            signal: controller.signal,
-          });
-          const data = await response.json();
-
-          if (!response.ok || data.error) {
-            throw new Error("Could not search for cities. Please try again.");
-          }
-
-          places = data.results || [];
+        if (!Array.isArray(data)) {
+          cityList = data?.data ?? data?.cities ?? [];
         }
 
-        setSuggestions(places);
-      } catch (error) {
-        if (error.name !== "AbortError") {
-          setSuggestions([]);
-          setSearchError(error.message || "Could not search for cities.");
+        const cityNames = cityList
+          .map((item) => typeof item === "string" ? item : item?.name)
+          .filter((name) => typeof name === "string" && name.trim());
+
+        setAllCities(cityNames);
+
+      } catch (err) {
+        if (err.name !== "AbortError") {
+          setError("Unable to load cities.");
+          setAllCities([]);
+          console.error(err);
         }
       } finally {
         if (!controller.signal.aborted) {
-          setIsSearching(false);
+          setLoading(false);
         }
       }
-    }, 350);
+    }, 400);
 
     return () => {
       clearTimeout(timeoutId);
       controller.abort();
     };
-  }, [city, isOpen, hasSelectedPlace]);
+  }, [search]);
 
-  const handleSelectCity = (place) => {
-    const selectedCity = [place.name, place.admin1, place.country]
-      .filter(Boolean)
-      .join(", ");
-
-    setCity(selectedCity);
-    setHasSelectedPlace(true);
-    setIsOpen(false);
-    setSuggestions([]);
-    setSearchError("");
-  };
+  const filteredCities = allCities.filter((item) =>
+    item.toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
     <>
@@ -136,85 +83,51 @@ function CityManager({
         <div className="flex flex-col gap-3 sm:flex-row">
           <div className="relative min-w-0 flex-1">
             <input
-              className="w-full min-w-0 rounded-full border border-slate-200 bg-slate-50 px-5 py-3 outline-none transition focus:border-slate-500"
+              className="w-full rounded-full border border-slate-200 bg-slate-50 px-5 py-3 outline-none focus:border-slate-500"
               type="text"
               placeholder="Search any city in the world..."
-              value={city}
+              value={search}
               autoComplete="off"
-              role="combobox"
-              aria-autocomplete="list"
-              aria-expanded={isOpen}
-              onChange={(e) => {
-                setCity(e.target.value);
-                setHasSelectedPlace(false);
-                setIsSearching(true);
-                setSuggestions([]);
-                setSearchError("");
-                setIsOpen(true);
-              }}
-              onFocus={() => {
-                if (city.trim() && !hasSelectedPlace) {
-                  setIsSearching(true);
-                }
-                setIsOpen(true);
-              }}
+              onChange={(e) => setCity(e.target.value)}
+              onFocus={() => setOpen(true)}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   e.preventDefault();
-
-                  if (isOpen && suggestions.length > 0) {
-                    handleSelectCity(suggestions[0]);
-                  } else if (hasSelectedPlace && !isSearching) {
-                    setIsOpen(false);
-                    onAddCity();
-                  }
-                }
-
-                if (e.key === "Escape") {
-                  setIsOpen(false);
+                  onAddCity();
+                  setOpen(false);
                 }
               }}
             />
 
-            {isOpen && city.trim().length >= 1 && (
-              <div className="absolute left-0 right-0 z-50 mt-2 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg">
-                {isSearching && (
-                  <p className="px-5 py-3 text-sm text-slate-500">
-                    Searching cities around the world...
-                  </p>
-                )}
+            {open && search.trim() && (
+              <div className="absolute left-0 right-0 top-full z-50 mt-2 max-h-60 overflow-y-auto rounded-2xl border border-slate-200 bg-white p-2 shadow-xl">
 
-                {!isSearching && searchError && (
-                  <p className="px-5 py-3 text-sm text-red-600">
-                    {searchError}
+                {loading ? (
+                  <p className="p-3 text-sm text-gray-500">
+                    Loading cities...
                   </p>
-                )}
-
-                {!isSearching && !searchError && suggestions.length === 0 && (
-                  <p className="px-5 py-3 text-sm text-slate-500">
-                    No city found.
+                ) : error ? (
+                  <p className="p-3 text-sm text-red-500">
+                    {error}
                   </p>
-                )}
-
-                {suggestions.length > 0 && (
-                  <ul className="max-h-60 overflow-y-auto py-1">
-                    {suggestions.map((place) => (
-                      <li
-                        key={place.id || `${place.name}-${place.latitude}-${place.longitude}`}
-                        onClick={() => handleSelectCity(place)}
-                        className="cursor-pointer px-5 py-2.5 text-sm text-slate-700 transition hover:bg-slate-100"
-                      >
-                        <span className="block font-medium text-slate-800">
-                          {place.name}
-                        </span>
-                        <span className="block text-xs text-slate-500">
-                          {[place.admin1, place.country]
-                            .filter(Boolean)
-                            .join(", ")}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
+                ) : filteredCities.length > 0 ? (
+                  filteredCities.slice(0, 50).map((item, index) => (
+                    <button
+                      key={`${item}-${index}`}
+                      type="button"
+                      onClick={() => {
+                        setCity(item);
+                        setOpen(false);
+                      }}
+                      className="w-full rounded-xl px-4 py-3 text-left hover:bg-slate-100"
+                    >
+                      {item}
+                    </button>
+                  ))
+                ) : (
+                  <p className="p-3 text-sm text-gray-500">
+                    No cities found
+                  </p>
                 )}
               </div>
             )}
@@ -223,15 +136,10 @@ function CityManager({
           <button
             type="button"
             onClick={() => {
-              if (!hasSelectedPlace) {
-                setIsOpen(true);
-                return;
-              }
-
-              setIsOpen(false);
               onAddCity();
+              setOpen(false);
             }}
-            className="rounded-full bg-slate-900 px-7 py-3 font-semibold text-white transition hover:bg-slate-700"
+            className="rounded-full bg-slate-900 px-7 py-3 font-semibold text-white hover:bg-slate-700"
           >
             + Add City
           </button>
@@ -244,32 +152,28 @@ function CityManager({
             {cities.map((item) => (
               <motion.li
                 key={item}
-                className="flex items-center gap-4 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md"
+                className="flex items-center gap-4 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md"
                 initial={{ opacity: 0, scale: 0 }}
                 animate={{ opacity: 1, scale: 1 }}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.9 }}
-                transition={{
-                  duration: 0.4,
-                  scale: {
-                    type: "spring",
-                    visualDuration: 0.4,
-                    bounce: 0.1,
-                  },
-                }}
+                transition={{ duration: 0.4 }}
               >
                 <button
                   onClick={() => onSelectCity(item)}
-                  className="flex flex-1 items-center gap-4 text-left"
+                  className="flex flex-1 items-center text-left"
                 >
-                  <span className="text-xl font-semibold text-slate-900 transition hover:text-indigo-600">
+                  <span className="text-xl font-semibold text-slate-900 hover:text-indigo-600">
                     {item}
                   </span>
                 </button>
 
                 <button
-                  onClick={() => onDeleteCity(item)}
-                  className="rounded-full bg-red-50 px-5 py-2 font-semibold text-red-600 transition hover:bg-red-100"
+                  onClick={() => {
+                    setCityToDelete(item);
+                    setShowDeletePopup(true);
+                  }}
+                  className="rounded-full bg-red-50 px-5 py-2 font-semibold text-red-600 hover:bg-red-100"
                 >
                   Delete
                 </button>
@@ -284,6 +188,48 @@ function CityManager({
           </div>
         )}
       </main>
+
+      {showDeletePopup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
+            <h2 className="mb-3 text-xl font-bold text-slate-900">
+              Delete City?
+            </h2>
+
+            <p className="mb-6 text-slate-500">
+              Are you sure you want to delete{" "}
+              <span className="font-semibold text-slate-900">
+                {cityToDelete}
+              </span>
+              ?
+            </p>
+
+            <div className="flex justify-end gap-3">
+              <button
+                onClick={() => {
+                  setShowDeletePopup(false);
+                  setCityToDelete(null);
+                }}
+                className="rounded-lg bg-slate-100 px-5 py-2 font-semibold text-slate-700 hover:bg-slate-200"
+              >
+                Cancel
+              </button>
+
+              <button
+                onClick={() => {
+                  if (cityToDelete) onDeleteCity(cityToDelete);
+
+                  setShowDeletePopup(false);
+                  setCityToDelete(null);
+                }}
+                className="rounded-lg bg-red-600 px-5 py-2 font-semibold text-white hover:bg-red-700"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
