@@ -1,9 +1,9 @@
-async function citycalling(searchTerm, signal) {
-  const baseUrl = import.meta.env.VITE_CITY_API;
-  console.log("CITY API URL:", baseUrl);
 
-  const url = new URL(baseUrl, window.location.origin);
+async function citycalling(searchTerm, signal) {
+  const url = new URL("/api/cities", window.location.origin);
+
   url.searchParams.set("search", searchTerm);
+
   const response = await fetch(url, { signal });
 
   if (!response.ok) {
@@ -11,6 +11,7 @@ async function citycalling(searchTerm, signal) {
   }
 
   const data = await response.json();
+
   return data;
 }
 
