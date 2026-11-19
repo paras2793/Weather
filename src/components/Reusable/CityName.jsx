@@ -1,5 +1,5 @@
 async function citycalling(searchTerm, signal) {
-  const baseUrl = import.meta.env.CITY_API;
+  const baseUrl = import.meta.env.VITE_CITY_API;
 
   const url = new URL(baseUrl, window.location.origin);
   url.searchParams.set("search", searchTerm);
