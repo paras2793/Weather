@@ -32,5 +32,4 @@ const toneClasses = {
 export default function WeatherInsights({ current, hourly, daily, airQuality }) {
   const insights = buildWeatherInsights({ current, hourly, daily, airQuality });
 
-
 }

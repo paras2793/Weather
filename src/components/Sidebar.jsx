@@ -281,15 +281,6 @@ function Sidebar({ cities, activeCity, onAddCity, onSelectCity, onRemoveCity }) 
 
       <div className="aether-mobile-header border-b px-4 py-3 backdrop-blur-2xl lg:hidden">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-100 text-sky-700">
-              <CloudSun size={23} />
-            </div>
-            <div>
-              <p className="text-base font-bold tracking-[0.16em] text-slate-800">WEATHER</p>
-              <p className="text-[9px] uppercase tracking-[0.2em] text-slate-500">Weather, clearly.</p>
-            </div>
-          </div>
           <button
             type="button"
             onClick={() => setMobileOpen((open) => !open)}

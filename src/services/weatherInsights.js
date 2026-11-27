@@ -13,10 +13,6 @@ function getUpcomingRainChance(hourly, current) {
   return chances.length ? Math.max(...chances) : null;
 }
 
-/**
- * Create short, deterministic tips from the actual weather and AQI response.
- * Each rule is deliberately visible and easy to adjust for learning.
- */
 export function buildWeatherInsights({ current, hourly, daily, airQuality }) {
   if (!current) return [];
 
